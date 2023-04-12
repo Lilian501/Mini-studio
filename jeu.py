@@ -1,5 +1,5 @@
 import pygame
-
+#oui bonjour
 pygame.init()
 
 #creer une classe qui va representer notre jeu
