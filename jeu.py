@@ -1,25 +1,38 @@
 import pygame
+
 #oui bonjour
 pygame.init()
-
+from monster import Monster
 #creer une classe qui va representer notre jeu
 
 class Game:
 
     def __init__(self):
         #générer notre joueur
+        self.all_players = pygame.sprite.Group()
+        self.player = Player(self)
+        self.all_players.add(self.player)
+        #groupe de monstre
+        self.all_monsters = pygame.sprite.Group()
+        self.pressed = {}
+        self.spawn_monster()
 
-        self.player = Player()
-        self.pressed = {
-            
-        }
+    def check_collision(self, sprite, group):
+        return pygame.sprite.spritecollide(sprite, group, False, pygame.sprite.collide_mask)
+
+
+    def spawn_monster(self):
+        monster = Monster(self)
+        self.all_monsters.add(monster)
 
 
 
 #creer une premiere classe qui va representer le joueur
 
 class Player (pygame.sprite.Sprite) :    
-    def __init__ (self):
+    def __init__ (self, game):
+        super().__init__()
+        self.game = game
         self.image = pygame.image.load("Asset/player.png")
         self.rect = self.image.get_rect()
         self.rect.x = 400
@@ -46,7 +59,9 @@ class Player (pygame.sprite.Sprite) :
         self.rect.x = self.rect.x - self.velocity
 
     def moove_right (self) :
-        self.rect.x += self.velocity 
+        #si le joueur n'est pas en collision
+        if not self.game.check_collision(self, self.game.all_monsters):
+            self.rect.x += self.velocity 
 
     
 
@@ -75,6 +90,10 @@ class Projectile(pygame.sprite.Sprite):
     def move(self):
         self.rect.x += self.velocity
 
+        #vérifier si le projectile touche un ennemni
+        if self.player.game.check_collision(self, self.player.game.all_monsters):
+            self.remove()
+
         #vérifier si le projectile n'est plus dans l'écran
         if self.rect.x > 1080:
             #supprimer le projectile
@@ -90,8 +109,8 @@ screen = pygame.display.set_mode((1080, 720))
 #importer l'arriere plan de notre jeu
 background = pygame.image.load('Asset/bg.jpg')
 
-# charger notre joueur
-player = Player()
+
+
 
 #charger notre jeu
 game = Game()
@@ -110,8 +129,15 @@ while running == True :
     for projectile in game.player.all_projectiles:
         projectile.move()
 
+    #recupérer les monstres de notre jeu
+    for monster in game.all_monsters:
+        monster.forward()
+
     #appliquer les images de mon groupe de projectiles
     game.player.all_projectiles.draw(screen)
+
+    #appliquer l'ensemble des images de mon groupe de monstres
+    game.all_monsters.draw(screen)
 
     #verifier si le joueur souhaite aller à gauche ou à droite
     if game.pressed.get(pygame.K_RIGHT) and game.player.rect.x + game.player.rect.width< screen.get_width():
