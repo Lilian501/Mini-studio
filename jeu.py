@@ -117,13 +117,13 @@ while running == True :
     if game.pressed.get(pygame.K_RIGHT) and game.player.rect.x + game.player.rect.width< screen.get_width():
         game.player.moove_right()
 
-    elif game.pressed.get(pygame.K_LEFT) and game.player.rect.x > 0:
+    if game.pressed.get(pygame.K_LEFT) and game.player.rect.x > 0:
         game.player.moove_left()
 
-    elif game.pressed.get(pygame.K_UP) and game.player.rect.y > 0:
+    if game.pressed.get(pygame.K_UP) and game.player.rect.y > 0:
         game.player.moove_up()
 
-    elif game.pressed.get(pygame.K_DOWN) and game.player.rect.y + game.player.rect.width< 720:
+    if game.pressed.get(pygame.K_DOWN) and game.player.rect.y + game.player.rect.width< 720:
         game.player.moove_down()
 
     
