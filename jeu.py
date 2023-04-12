@@ -59,6 +59,7 @@ class Projectile(pygame.sprite.Sprite):
     def __init__(self, player):
         super().__init__()
         self.velocity = 1
+        self.player = player
         self.image = pygame.image.load('Asset/projectile.png')
         self.image = pygame.transform.scale(self.image, (50, 50))
         self.rect = self.image.get_rect()
@@ -66,8 +67,19 @@ class Projectile(pygame.sprite.Sprite):
         self.rect.y = player.rect.y +100
 
 
+
+    def remove(self):
+        self.player.all_projectiles.remove(self)
+
+
     def move(self):
         self.rect.x += self.velocity
+
+        #vérifier si le projectile n'est plus dans l'écran
+        if self.rect.x > 1080:
+            #supprimer le projectile
+            self.remove()
+            
 
 
 
