@@ -55,6 +55,9 @@ class Obstacle (pygame.sprite.Sprite):
 class Game (object):
 
     def __init__(self):
+
+        #définir si note jeu a commencé ou non
+        self.is_playing = False
         self.all_players = pygame.sprite.Group()
         self.all_players = pygame.sprite.Group()
         self.player = Player(self)
@@ -66,9 +69,15 @@ class Game (object):
         self.all_players.add(self.player)
         self.all_obstacles = pygame.sprite.Group()
         self.spawn_obstacle()
+        self.distance = 0
+        self.distanceScore = 0
+        self.totalScore = 0
         
         #stocker les touches activées par le joueur 
         self.pressed = {}
+
+
+    
 
     def check_collision(self, sprite, group):
         return pygame.sprite.spritecollide(sprite, group, False, pygame.sprite.collide_mask)
@@ -101,6 +110,9 @@ class Player (pygame.sprite.Sprite):
         self.hp = 10
         self.shootingMode = "normal"
         self.all_projectiles = pygame.sprite.Group()
+
+
+
 
 
     def damage(self, amount):
@@ -137,7 +149,7 @@ class Projectile(pygame.sprite.Sprite):
     def __init__(self, player):
         super().__init__()
         self.game = game
-        self.velocity = 7
+        self.velocity = 5
         self.player = player
         self.image = pygame.image.load('img/projectile.png')
         self.image = pygame.transform.scale(self.image, (50, 50))
@@ -215,6 +227,19 @@ screen = pygame.display.set_mode((1080, 720))
 background = pygame.image.load('img/fond.png')
 background = pygame.transform.scale(background, (1080, 720)) #On redimensionne l'image de fond (pas nécéssaire si l'image est déja dans les bonnes dims)
 
+#importer charger notre bannière
+banner = pygame.image.load('Asset/banner.png')
+banner = pygame.transform.scale(banner, (500, 500))
+banner_rect = banner.get_rect()
+banner_rect.x = screen.get_width() / 4
+
+#charger notre bouton
+play_button = pygame.image.load('Asset/button.png')
+play_button = pygame.transform.scale(play_button, (400, 150))
+play_button_rect = play_button.get_rect()
+play_button_rect.x = screen.get_width() / 3.33
+play_button_rect.y = screen.get_height() / 2
+
 
 game = Game()
 running = True
@@ -225,54 +250,82 @@ myFont = pygame.font.SysFont('arial', 18) #Pour mettre une font et print une var
 FPS = 100
 fpsClock = pygame.time.Clock()
 imageCount = 0 #compteur qui va servir à faire défiler les images
-globalCount = 0
-scoreCount = 0
 speed = 3 #Vitesse globale du jeu
 
 ######################################################################## Boucle Principale ################################################################################################################
 
 while running == True :
 
-    for obstacle in game.all_obstacles:
-        obstacle.forward()
+    
 
-    blitage()
+    
+
+    #vérifier si le jeu à commencé
+    if game.is_playing:
+        blitage()
+
+        distance = myFont.render(str(game.distance), 1, (255,255,255))
+        score = myFont.render(str(game.totalScore), 1, (255,255,255))
+        fps = myFont.render(str(FPS), 1, (255,255,255))
+        screen.blit(distance, (520, 30))
+        screen.blit(score, (520, 60))
+        screen.blit(fps, (1040, 10))
+
+        for obstacle in game.all_obstacles:
+            obstacle.forward()
 
 
-    #récupérer les projectiles du joueur
-    for projectile in game.player.all_projectiles:
-        projectile.move()
+        #récupérer les projectiles du joueur
+        for projectile in game.player.all_projectiles:
+            projectile.move()
 
-    #recupérer les monstres de notre jeu
-    for monster in game.all_monsters:
-        monster.forward()
+        #recupérer les monstres de notre jeu
+        for monster in game.all_monsters:
+            monster.forward()
 
 
-    #appliquer les images de mon groupe de projectiles
-    game.player.all_projectiles.draw(screen)
+        #appliquer les images de mon groupe de projectiles
+        game.player.all_projectiles.draw(screen)
 
-    #appliquer l'ensemble des images de mon groupe de monstres
-    game.all_monsters.draw(screen)
+        game.all_obstacles.draw(screen)
 
-    if game.pressed.get(pygame.K_UP) and game.player.rect.y > 0 :
-      game.player.moveUp()
+        #appliquer l'ensemble des images de mon groupe de monstres
+        game.all_monsters.draw(screen)
 
-    if game.pressed.get(pygame.K_DOWN) and game.player.rect.y + game.player.rect.width < screen.get_height() :
-      game.player.moveDown()
+        if game.pressed.get(pygame.K_UP) and game.player.rect.y > 0 :
+            game.player.moveUp()
 
-    if game.pressed.get(pygame.K_LEFT) and game.player.rect.x > 0:
-      game.player.moveLeft()
+        if game.pressed.get(pygame.K_DOWN) and game.player.rect.y + game.player.rect.width < screen.get_height() :
+            game.player.moveDown()
 
-    if game.pressed.get(pygame.K_RIGHT) and game.player.rect.x + game.player.rect.width < screen.get_width():
-       game.player.moveRight()
+        if game.pressed.get(pygame.K_LEFT) and game.player.rect.x > 0:
+            game.player.moveLeft()
+
+        if game.pressed.get(pygame.K_RIGHT) and game.player.rect.x + game.player.rect.width < screen.get_width():
+            game.player.moveRight()
+        
+        
+
+
+    #vérifier si le jeu n'a pas commencé
+    else :
+        screen.blit(play_button, play_button_rect)
+        screen.blit(banner, banner_rect)
+        
+        
+
+
+    
 
     #print(game.player.rect.y)
     
-    game.all_obstacles.draw(screen)
+    
 
     imageCount = imageCount + speed
     if imageCount >= 1080:
         imageCount = 0
+
+    print(game.player.health)
 
     #Tentative d'animation sur l'oiseau, marche à moitié
     #if globalCount == 0 :
@@ -284,26 +337,24 @@ while running == True :
             #game.player.image = tabAnimWazo[0]
 
     #Ca print du texte 
-    distance = myFont.render(str(globalCount), 1, (255,255,255))
-    score = myFont.render(str(scoreCount), 1, (255,255,255))
-    fps = myFont.render(str(FPS), 1, (255,255,255))
-    screen.blit(distance, (520, 30))
-    screen.blit(score, (520, 60))
-    screen.blit(fps, (1040, 10))
+    
 
     pygame.display.flip()
     
     fpsClock.tick(FPS)
 
-    globalCount = globalCount + 1 
+    lastDistance = game.distanceScore 
 
-    scoreCount = int(globalCount/10) # + point d'élimination
+    game.distance = game.distance + 1 
 
-    if globalCount % 1000 == 0:
-        if speed < 50 :
-            speed += 1
+    game.distanceScore = int(game.distance/10)
 
-    print(game.player.health)
+    game.totalScore = game.totalScore + (game.distanceScore - lastDistance)
+
+    if game.distance > 100:
+        if game.totalScore % 1000 == 0:
+            if speed < 50 :
+                speed += 1
     
     #print(speed) 
  
@@ -325,3 +376,9 @@ while running == True :
 
         elif event.type == pygame.KEYUP:
             game.pressed[event.key] = False
+
+        elif event.type == pygame.MOUSEBUTTONDOWN :
+            #vérification si la souris touche le bouton
+            if play_button_rect.collidepoint(event.pos):
+                #lancer le jeu
+                game.is_playing = True
